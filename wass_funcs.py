@@ -2,10 +2,11 @@ from __future__ import division
 import ot, numpy as np, sys, codecs, string, editdistance
 from scipy import sparse
 from sklearn.metrics import euclidean_distances
-from sklearn.externals.joblib import Parallel, delayed
+import joblib
+
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import check_array
-from sklearn.metrics.scorer import check_scoring
+
 from sklearn.preprocessing import normalize
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -41,7 +42,7 @@ def clean_corpus_using_embeddings_vocabulary(word2keep, embeddings_dico, corpus,
         words = word_tokenize(doc)#.split()
         for word in words:
             word = word.lower()
-            if word in words_we_want: 
+            if word in words_we_want:
                 clean_doc.append(word+"__%s"%language)
                 clean_vectors[word+"__%s"%language] = np.array(vectors[word].split()).astype(np.float)
             if len(clean_doc) == word2keep:
@@ -55,7 +56,7 @@ def clean_corpus_using_embeddings_vocabulary(word2keep, embeddings_dico, corpus,
 
 def load_embeddings(path, dimension):
     """
-    Loads the embeddings from a file with word2vec format. 
+    Loads the embeddings from a file with word2vec format.
     The word2vec format is one line per words and its associated embedding.
     """
     f = codecs.open(path, encoding="utf8").read().splitlines()
@@ -69,10 +70,10 @@ def load_embeddings(path, dimension):
 class WassersteinDistances(KNeighborsClassifier):
     """
     Implements a nearest neighbors classifier for input distributions using the Wasserstein distance as metric.
-    Source and target distributions are l_1 normalized before computing the Wasserstein distance. 
-    Wasserstein is parametrized by the distances between the individual points of the distributions.  
+    Source and target distributions are l_1 normalized before computing the Wasserstein distance.
+    Wasserstein is parametrized by the distances between the individual points of the distributions.
     In this work, we propose to use cross-lingual embeddings for calculating these distances.
-        
+
     """
     def __init__(self, W_embed, n_neighbors=1, n_jobs=1, verbose=False, sinkhorn= False, sinkhorn_reg=0.1):
         """
@@ -86,7 +87,7 @@ class WassersteinDistances(KNeighborsClassifier):
         self.sinkhorn_reg = sinkhorn_reg
         self.W_embed = W_embed
         self.verbose = verbose
-        super(WassersteinDistances, self).__init__(n_neighbors=n_neighbors, n_jobs=n_jobs, metric='precomputed', algorithm='brute')
+        super(WassersteinDistances, self).__init__(n_neighbors=n_neighbors, metric= 'euclidean', n_jobs=n_jobs, algorithm='brute')
 
     def _wmd(self, i, row, X_train):
         union_idx = np.union1d(X_train[i].indices, row.indices)

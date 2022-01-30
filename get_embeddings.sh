@@ -7,9 +7,9 @@ python extract_embeddings_conceptNet.py
 echo "Done. Cleaning.."
 rm numberbatch-17.06.txt
 echo "Done!"
-echo 
 echo
-echo 
+echo
+echo
 
 
 
